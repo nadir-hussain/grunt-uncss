@@ -18,7 +18,7 @@ module.exports = function (grunt) {
         const options = this.options({
             report: 'min'
         });
-
+        let fileInProcess = 0;
         this.files.forEach(file => {
             const src = file.src.filter(filepath => {
                 if (/^https?:\/\//.test(filepath)) {
@@ -40,7 +40,13 @@ module.exports = function (grunt) {
             }
 
             try {
+                fileInProcess++;
                 uncss(src, options, (error, output, report) => {
+                    fileInProcess--;
+                    if (fileInProcess === 0) {
+                        done();
+                    }
+
                     if (error) {
                         throw error;
                     }
@@ -51,8 +57,6 @@ module.exports = function (grunt) {
                     if (typeof options.reportFile !== 'undefined' && options.reportFile.length > 0) {
                         grunt.file.write(options.reportFile, JSON.stringify(report));
                     }
-
-                    done();
                 });
             } catch (error) {
                 const err = new Error('Uncss failed.');
